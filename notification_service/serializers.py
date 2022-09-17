@@ -6,4 +6,4 @@ class MailingSerializer(ModelSerializer):
 
     class Meta:
         model = MailingList
-        field = '__all__'
+        fields = '__all__'
