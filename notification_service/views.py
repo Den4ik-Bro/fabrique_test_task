@@ -34,7 +34,7 @@ class MailingListViewSet(ModelViewSet):
                 data = {
                     'id': message.pk,
                     'text': mailing.text,
-                    'phone': int(message.user.phone),
+                    'phone': int(message.client.phone),
                     'start': mailing.start_time,
                     'stop': mailing.finish_time,
                     'now': datetime.datetime.now(),
