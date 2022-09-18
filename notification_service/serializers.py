@@ -1,15 +1,12 @@
-from django.contrib.auth import get_user_model
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from .models import MailingList
+from .models import MailingList, Client
 
 
-User = get_user_model()
-
-
-class UserSerializer(ModelSerializer):
+class ClientSerializer(ModelSerializer):
 
     class Meta:
-        model = User
+        model = Client
         fields = '__all__'
 
 
@@ -18,3 +15,8 @@ class MailingSerializer(ModelSerializer):
     class Meta:
         model = MailingList
         fields = '__all__'
+
+    def validate(self, data):
+        if data['start_time'] > data['finish_time']:
+            raise serializers.ValidationError('The send date cannot be later than the end date')
+        return super().validate(data)
