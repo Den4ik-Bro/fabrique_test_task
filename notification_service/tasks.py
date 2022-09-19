@@ -1,12 +1,17 @@
 import os
+
+import celery
 from core.celery import app
 import requests
-from .models import Message
+from django.utils import timezone
+
+from .models import Message, MailingList
 
 
 @app.task(bind=True)
-def send_message(self, data):
-    if data['start'] <= data['now'] <= data['stop']:
+def send_message(self, data, mailing_id):
+    mailing = MailingList.objects.get(pk=mailing_id)
+    if mailing.start_time.timetz() <= timezone.now().timetz() <= mailing.finish_time.timetz():
         token = os.environ.get('TOKEN')
         headers = {
             'Authorization': f'Bearer {token}',
@@ -21,7 +26,10 @@ def send_message(self, data):
             Message.objects.filter(pk=data['id']).update(status='sent')
         return response.status_code
     else:
-        self.retry(countdown=120)
+        try:
+            self.retry(eta=mailing.start_time)
+        except celery.exceptions.MaxRetriesExceededError:
+            return False
 
     # mailing = MailingList.objects.get(pk=mailing_id)
     # users = User.objects.filter(
