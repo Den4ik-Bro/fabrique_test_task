@@ -33,7 +33,7 @@ class Client(models.Model):
         )],
         verbose_name='phone number'
     )
-    mobile_operator_code = models.CharField(max_length=3, verbose_name='mobile operator code')
+    mobile_operator_code = models.CharField(max_length=3, verbose_name='mobile operator code', blank=True)
     tag = models.CharField(max_length=100, verbose_name='tag', blank=True)
     time_zone = models.CharField(max_length=100, verbose_name='time zone', blank=True)
 

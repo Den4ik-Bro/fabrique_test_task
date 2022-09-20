@@ -17,7 +17,7 @@ class ClientViewSet(ModelViewSet):
 class MailingListViewSet(ModelViewSet):
     queryset = MailingList.objects.all()
     serializer_class = MailingSerializer
-    permission_classes = [IsAuthenticated, ]
+    # permission_classes = [IsAuthenticated, ]
 
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
