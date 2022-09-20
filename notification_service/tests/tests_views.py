@@ -2,7 +2,7 @@ from datetime import timedelta
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-from notification_service.models import Client, MailingList
+from notification_service.models import Client, MailingList, Message
 from django.utils import timezone
 
 
@@ -95,3 +95,48 @@ class MailingListViewSetTestCase(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_detail_mailing_info(self):
+        clients = [Client(phone=f'7999888776{num}') for num in range(1, 4)]
+        Client.objects.bulk_create(clients)
+        messages = [
+            Message(client=client, mailing_list=self.mailing, status='not sent') for client in Client.objects.all()
+        ]
+        Message.objects.bulk_create(messages)
+
+        url = reverse('mailing-detail-mailing-info', kwargs={'pk': self.mailing.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(), {
+                'start_time': '2022-09-20T22:23:35.175520+03:00',
+                'finish_time': '2022-09-20T23:23:35.175535+03:00',
+                'count_sent_messages': 3,
+                'count_status_sent': 0,
+                'count_status_not_sent': 3,
+                'user_filter_tag': None,
+                'user_filter_phone_code': None,
+                'clients': ['79998887761', '79998887762', '79998887763'],
+                'message_text': 'test'
+            }
+        )
+
+    def test_full_statistics_for_mailings(self):
+        clients = [Client(phone=f'7999888776{num}') for num in range(1, 4)]
+        Client.objects.bulk_create(clients)
+        messages = [
+            Message(client=client, mailing_list=self.mailing, status='not sent') for client in Client.objects.all()
+        ]
+        Message.objects.bulk_create(messages)
+
+        url = reverse('mailing-full-statistics-for-mailings')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['full_statistic'][0], {
+                'mailing_id': 1,
+                'count_messages': 3,
+                'count_status_sent': 0,
+                'count_status_not_sent': 3
+            }
+        )
