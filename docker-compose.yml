@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "0.0.0.0:8000:8000"
+    env_file:
+          - .env
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+
+  celery:
+    build: .
+    restart: always
+    command: celery worker --app=notification_service --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - web
+      - redis
+
+  dashboard:
+    container_name: dashboard
+    build: .
+    command: flower --app=notification_service --port=5555 broker=redis://redis:6379/0
+    ports:
+      - 5555:5555
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - web
+      - celery
