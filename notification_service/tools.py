@@ -1,6 +1,10 @@
+import logging
 from django.db.models import Q
 from .models import Client, Message
 from .tasks import send_message
+
+
+logger = logging.getLogger(__name__)
 
 
 def data_for_send(mailing):
@@ -15,4 +19,5 @@ def data_for_send(mailing):
             'text': mailing.text,
             'phone': int(message.client.phone),
         }
+        logger.info(f'data processing before sending for {list(clients)}')
         send_message.delay(data=data, mailing_id=mailing.pk)

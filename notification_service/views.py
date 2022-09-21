@@ -1,3 +1,4 @@
+import logging
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -9,9 +10,16 @@ from rest_framework.permissions import IsAuthenticated
 from .tools import data_for_send
 
 
+logger = logging.getLogger(__name__)
+
+
 class ClientViewSet(ModelViewSet):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
+    def create(self, request, *args, **kwargs):
+        logger.info(f'create client, phone: {request.data["phone"]}')
+        return super().create(request, *args, **kwargs)
 
 
 class MailingListViewSet(ModelViewSet):
@@ -23,8 +31,10 @@ class MailingListViewSet(ModelViewSet):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             mailing = serializer.save()
+            logger.info(f'create mailing, id: {mailing.pk}')
             data_for_send(mailing)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        logger.error(f'error creating mailing list, {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['GET'])
