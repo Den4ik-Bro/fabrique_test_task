@@ -1,5 +1,4 @@
 import os
-import logging
 import celery
 from core.celery import app
 import requests
@@ -9,8 +8,6 @@ from celery.utils.log import get_task_logger
 
 
 logger = get_task_logger(__name__)
-
-# logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
